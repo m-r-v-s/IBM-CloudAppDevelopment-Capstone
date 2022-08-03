@@ -12,11 +12,38 @@
     <script src="https://unpkg.com/bootstrap-table@1.18.2/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
 
 </head>
-
+    <!-- navbar-light := Text color; bg-light:= Background color; navbar-expand-lg:= expand items horizontally for "lg":= large screens-->
     <body>
-    <!-- Remove this line the first time you edit this file -->
-     This is the index page of your Django app!
-    <!--Add a nav bar here -->
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <title>Bootstrap </title>
+          <meta charset="utf-8">
+        </head>
+        <body>    
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+              <div class="container-fluid">
+                <a class="navbar-brand" href="#">Best Cars</a>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                  <ul class="navbar-nav ">
+                    <li class="nav-item">
+                      <a class="nav-link active" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="{% url 'djangoapp:about' %}">About</a>
+                    </li>			
+                    <li class="nav-item">
+                      <a class="nav-link" href="#">Another</a>
+                    </li>
+                  </ul>		  
+                </div>
+              </div>
+            </nav>
+            <footer class = "bg-light">
+                <a  href = "{% url 'djangoapp:contact' %}">Contact Us</a>
+            </footer>
+        </body>
+        </html>
 
     <!--Add a dealer table here -->
 
