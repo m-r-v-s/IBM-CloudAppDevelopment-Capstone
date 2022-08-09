@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 from django.conf.urls.static import static
 from django.conf import settings
 from . import views
@@ -12,7 +12,7 @@ urlpatterns = [
     path(route='login/', view = views.login_request, name ="login" ),
     path(route = 'logout/', view = views.logout_request, name ="logout"),
     path(route='', view=views.get_dealerships, name='index'),
-
+    path(route='reviews/', view = views.get_dealer_details, name = 'reviews')
     # path for dealer reviews view
 
     # path for add a review view

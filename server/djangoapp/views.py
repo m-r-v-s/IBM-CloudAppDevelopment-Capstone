@@ -4,6 +4,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 # from .models import related models
+from .models import CarDealer, CarModel, CarMake
 # from .restapis import related methods
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
@@ -11,6 +12,9 @@ from datetime import datetime
 from django.views import generic
 import logging
 import json
+from .restapis import get_dealers_from_cf, get_dealer_from_cf_by_id,\
+     get_dealer_reviews_from_cf
+from requests import request
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -81,14 +85,43 @@ def registration_request(request):
             return render(request,'djangoapp/registration.html', context)
 
 
-# Update the `get_dealerships` view to render the index page with a list of dealerships
-def get_dealerships(request):
-    context = {}
-    if request.method == "GET":
-        return render(request, 'djangoapp/index.html', context)
-    else:
-        return redirect('djangoapp:index')
 
+def get_dealerships(request):
+    dealerID_parameter = request.GET.get('dealerID', None)
+    state_parameter = request.GET.get('state', None)
+    if request.method == "GET" and dealerID_parameter is not None:
+        url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/dealerships"
+        dealership = get_dealer_from_cf_by_id(url, dealer_id = dealerID_parameter)
+        dealer_name = dealership.short_name
+        return HttpResponse(dealer_name)
+    elif request.method == "GET" and state_parameter is not None:
+        url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/dealerships"
+        dealerships = get_dealers_from_cf(url, state = state_parameter)
+        dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
+        return HttpResponse(dealer_names)
+    elif request.method == "GET":
+        url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/dealerships"
+        dealerships = get_dealers_from_cf(url)
+        dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
+        return HttpResponse(dealer_names)
+
+def get_dealer_details(request):
+    dealerID_parameter = request.GET.get("dealerID", None)
+    if request.method == "GET":
+        url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/reviews"
+        dealer_reviews = get_dealer_reviews_from_cf(url, dealerID = dealerID_parameter)
+        review_contents = ' \n'.join([review_obj.review for review_obj in dealer_reviews])
+        return HttpResponse(review_contents)
+
+
+
+
+# def get_dealers_by_id(request):
+#     if request.method == "GET":
+#         url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/dealerships"
+#         dealerships = get_dealers_by_id(url, dealerID = dealer_id)
+#         dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
+#         return HttpResponse(dealer_names)
 
 # Create a `get_dealer_details` view to render the reviews of a dealer
 # def get_dealer_details(request, dealer_id):

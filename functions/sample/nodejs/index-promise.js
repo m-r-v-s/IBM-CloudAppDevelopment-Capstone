@@ -64,3 +64,29 @@ function getDbs(cloudant) {
              });
          })
  }
+
+ function getDealerships(cloudant) {
+    return new Promise((resolve, reject) => {
+        cloudant.postAllDocs({ db: dbname, includeDocs: true, limit: 10 })            
+            .then((result)=>{
+              resolve({result:result.result.rows});
+            })
+            .catch(err => {
+               console.log(err);
+               reject({ err: err });
+            });
+        })
+}
+// {state: < > }
+function getDealershipsInState(cloudant, selector) {
+    return new Promise((resolve, reject) => {
+        cloudant.postFind({db:"dealerships",selector:selector})
+                .then((result)=>{
+                  resolve({result:result.result.docs});
+                })
+                .catch(err => {
+                   console.log(err);
+                    reject({ err: err });
+                });
+         })
+}
