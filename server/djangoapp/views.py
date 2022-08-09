@@ -110,7 +110,9 @@ def get_dealer_details(request):
     if request.method == "GET":
         url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/reviews"
         dealer_reviews = get_dealer_reviews_from_cf(url, dealerID = dealerID_parameter)
-        review_contents = ' \n'.join([review_obj.review for review_obj in dealer_reviews])
+        review_contents = []
+        for review_obj in dealer_reviews:
+           review_contents.append(' \n'.join("Review:" + review_obj.review + "\tSentiment:" + review_obj.sentiment))
         return HttpResponse(review_contents)
 
 

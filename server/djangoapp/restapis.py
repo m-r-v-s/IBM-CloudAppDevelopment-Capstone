@@ -3,22 +3,43 @@ import requests
 import json
 from .models import CarDealer, CarMake, CarModel, DealerReview
 from requests.auth import HTTPBasicAuth
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_watson import NaturalLanguageUnderstandingV1
+from ibm_watson.natural_language_understanding_v1 import Features,SentimentOptions
 
 
 
 def get_request(url, **kwargs):
     print(kwargs)
     print("GET from {} ".format(url))
-    try:
-        response = requests.get(url, headers={'Content-Type': 'application/json'},
-                                    params=kwargs)
-    except:
-        print("Network exception occurred")
+    api_key = kwargs.get("api_key", None)
+    if api_key:
+        try:
+            params = dict()
+            params["text"] = kwargs["text"]
+            params["version"] = kwargs["version"]
+            params["features"] = kwargs["features"]
+            params["return_analyzed_text"] = kwargs["return_analyzed_text"]
+            response = requests.get(url, headers={'Content-Type': 'application/json'},
+                                    params=params, auth=HTTPBasicAuth('apikey', api_key))
+        except:
+            print("Network exception occurred")
+        else:
+            status_code = response.status_code
+            print("With status {} ".format(status_code))
+            json_data = json.loads(response.text) # responst.text is a JSON STRING: """{"Name" : "Mathias", "Contact Number": "123" }"""
+            return json_data
     else:
-        status_code = response.status_code
-        print("With status {} ".format(status_code))
-        json_data = json.loads(response.text) # responst.text is a JSON STRING: """{"Name" : "Mathias", "Contact Number": "123" }"""
-        return json_data
+        try:
+            response = requests.get(url, headers={'Content-Type': 'application/json'},
+                                        params=kwargs)
+        except:
+            print("Network exception occurred")
+        else:
+            status_code = response.status_code
+            print("With status {} ".format(status_code))
+            json_data = json.loads(response.text) # responst.text is a JSON STRING: """{"Name" : "Mathias", "Contact Number": "123" }"""
+            return json_data
 
 
 
@@ -68,17 +89,27 @@ def get_dealer_from_cf_by_state(url, state):
 
 def get_dealer_reviews_from_cf(url, dealerID):
     results = []
+    
     json_result = get_request(url, dealerID = dealerID)
     if json_result:
         reviews = json_result["body"]["data"]["docs"]
         for review in reviews:
             review_obj = DealerReview(dealership_= review["dealership"], name_ = review["name"],
                  purchase_=review["purchase"], review_ = review["review"], purchase_date_= review["purchase_date"], 
-                 car_make_= review["car_make"], car_year_= review["car_year"], id_ = review["id"])
+                 car_make_= review["car_make"], car_year_= review["car_year"], id_ = review["id"], sentiment_ = analyze_review_sentiments(review["review"]))
             results.append(review_obj)
     return results
 
-
+def analyze_review_sentiments(dealerreview):
+    url ="https://api.eu-de.natural-language-understanding.watson.cloud.ibm.com/instances/8f282c81-1fd5-4830-92dd-daab22567857"
+    api_key = "qqOljjCnUPMGMMM-xcXOaJcuvXao75ZDXblWY3mdkFYX"
+    authenticator = IAMAuthenticator(api_key)
+    natural_language_understanding = NaturalLanguageUnderstandingV1(version='2022-08-01',authenticator=authenticator)
+    natural_language_understanding.set_service_url(url)
+    response = natural_language_understanding.analyze( text=dealerreview,features=Features(sentiment=SentimentOptions(targets=[dealerreview]))).get_result()
+    sentiment = json.dumps(response, indent=2)
+    sentiment = response['sentiment']['document']['label']
+    return sentiment
 
 # Create a `post_request` to make HTTP POST requests
 # e.g., response = requests.post(url, params=kwargs, json=payload)
@@ -100,6 +131,3 @@ def get_dealer_reviews_from_cf(url, dealerID):
 # def analyze_review_sentiments(text):
 # - Call get_request() with specified arguments
 # - Get the returned sentiment label such as Positive or Negative
-
-
-
