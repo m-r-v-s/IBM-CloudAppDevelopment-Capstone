@@ -1,37 +1,18 @@
 from distutils import file_util
 from django.db import models
 from django.utils.timezone import now
-
-
-# Create your models here.
-
-# <HINT> Create a Car Make model `class CarMake(models.Model)`:
-# - Name
-# - Description
-# - Any other fields you would like to include in car make model
-# - __str__ method to print a car make object
+import datetime
 
 class CarMake(models.Model):
-    name = models.TextField(),
-    description = models.TextField(),
+    name = models.TextField(null = False, primary_key=True)
+    description = models.TextField()
     def __str__(self):
         return(f"Name: {self.name}, \n Description: {self.description}")
 
-
-
-# <HINT> Create a Car Model model `class CarModel(models.Model):`:
-# - Many-To-One relationship to Car Make model (One Car Make has many Car Models, using ForeignKey field)
-# - Name
-# - Dealer id, used to refer a dealer created in cloudant database
-# - Type (CharField with a choices argument to provide limited choices such as Sedan, SUV, WAGON, etc.)
-# - Year (DateField)
-# - Any other fields you would like to include in car model
-# - __str__ method to print a car make object
-
 class CarModel(models.Model):
-    make = models.ForeignKey(CarMake, on_delete=models.CASCADE),
-    name = models.TextField(),
-    dealerID = models.IntegerField(),
+    make = models.ForeignKey(CarMake, on_delete=models.CASCADE)
+    name = models.CharField(null = False, max_length = 20, primary_key=True)
+    dealerID = models.IntegerField(null=False)
     SEDAN = "sedan"
     SUV = "suv"
     WAGON = "wagon"
@@ -45,13 +26,12 @@ class CarModel(models.Model):
         (HATCHBACK, "Hatchback")
     ]
     type = models.CharField(max_length=120, choices=MODEL_CHOICES)
-    year = models.IntegerField(),
+    year = models.IntegerField(default=datetime.date.today().year)
+
     def __str__(self):
         return(f"Make: {self.make},\nName: {self.name},\n\
             Dealer-ID: {self.dealerID},\nType: {self.type},\nYear: {self.year}")
 
-
-# <HINT> Create a plain Python class `CarDealer` to hold dealer data
 
 class CarDealer:
     def __init__(self, address, city, full_name, id, lat, long, short_name, st, zip):
@@ -69,16 +49,16 @@ class CarDealer:
 
 
 class DealerReview:
-    def __init__(self, dealership_, name_, purchase_, review_, purchase_date_, car_make_, car_year_, id_, sentiment_):
+    def __init__(self, dealership_, name_, purchase_, review_, purchase_date_, car_make_, car_year_, id_, sentiment_,car_model_):
         self.dealership = dealership_
         self.name = name_
         self.purchase = purchase_
         self.review = review_
         self.purchase_date = purchase_date_
+        self.car_model = car_model_
         self.car_make = car_make_
         self.car_year = car_year_
         self.id = id_
         self.sentiment = sentiment_
     
 
-# <HINT> Create a plain Python class `DealerReview` to hold review data

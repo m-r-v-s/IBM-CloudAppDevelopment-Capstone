@@ -1,11 +1,10 @@
 from functools import reduce
+from multiprocessing import context
 from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
-# from .models import related models
-from .models import CarDealer, CarModel, CarMake
-# from .restapis import related methods
+from .models import CarDealer, CarModel, CarMake, DealerReview
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from datetime import datetime
@@ -13,28 +12,24 @@ from django.views import generic
 import logging
 import json
 from .restapis import get_dealers_from_cf, get_dealer_from_cf_by_id,\
-     get_dealer_reviews_from_cf
+     get_dealer_reviews_from_cf, post_request
 from requests import request
+import datetime
 
-# Get an instance of a logger
+
+
+
 logger = logging.getLogger(__name__)
 
 
-# Create your views here.
-# class IndexView(generic.ArchiveIndexView):
-#     template_name = "djangoapp/index.html"
-#     context_object_name = 'index'
 
-# Create an `about` view to render a static about page
 def about(request):
     context = {}
     return render(request, 'djangoapp/about.html', context)
 
 
-# Create a `contact` view to return a static contact page
 def contact(request):
     return render(request, 'djangoapp/contact.html')
-# Create a `login_request` view to handle sign in request
 
 
 
@@ -54,13 +49,11 @@ def login_request(request):
 
 
 
-# Create a `logout_request` view to handle sign out request
 def logout_request(request):
         logout(request)
         return redirect('djangoapp:index')
     
 
-# Create a `registration_request` view to handle sign up request
 def registration_request(request):
     context = {}
     if request.method == "GET": 
@@ -87,49 +80,67 @@ def registration_request(request):
 
 
 def get_dealerships(request):
+    context = dict()
     dealerID_parameter = request.GET.get('dealerID', None)
     state_parameter = request.GET.get('state', None)
     if request.method == "GET" and dealerID_parameter is not None:
         url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/dealerships"
         dealership = get_dealer_from_cf_by_id(url, dealer_id = dealerID_parameter)
+        context["dealership"] = dealership
         dealer_name = dealership.short_name
-        return HttpResponse(dealer_name)
+        return render(request, 'djangoapp/index.html', context=context)
     elif request.method == "GET" and state_parameter is not None:
         url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/dealerships"
         dealerships = get_dealers_from_cf(url, state = state_parameter)
+        context["dealerships"] = dealerships
         dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
-        return HttpResponse(dealer_names)
+        return render(request, 'djangoapp/index.html', context=context)
     elif request.method == "GET":
         url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/dealerships"
         dealerships = get_dealers_from_cf(url)
+        context["dealerships"] = dealerships
         dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
-        return HttpResponse(dealer_names)
+        return render(request, 'djangoapp/index.html', context=context)
 
-def get_dealer_details(request):
-    dealerID_parameter = request.GET.get("dealerID", None)
+def get_dealer_details(request, dealerID):
+    context = dict()
+    dealerID_parameter = int(dealerID) #= request.GET.get("dealerID", None) | 
+    context["dealerID"] = dealerID_parameter
     if request.method == "GET":
         url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/reviews"
         dealer_reviews = get_dealer_reviews_from_cf(url, dealerID = dealerID_parameter)
         review_contents = []
         for review_obj in dealer_reviews:
            review_contents.append(' \n'.join("Review:" + review_obj.review + "\tSentiment:" + review_obj.sentiment))
-        return HttpResponse(review_contents)
+        context["dealer_reviews"] = dealer_reviews
+        return render(request, 'djangoapp/dealer_details.html', context)
 
+def add_review(request, dealerID):
+    context = dict()
+    review = dict()
+    api_url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/reviews/post"
+    current_user = request.user
+    time_ = datetime.date.today().isoformat()
+    if request.method == "GET" and current_user.is_authenticated:
+        cars = CarModel.objects.all()
+        context["cars"] = cars
+        context["dealerID"] = dealerID
+        print(context)
+        return render(request, 'djangoapp/add_review.html', context)
 
-
-
-# def get_dealers_by_id(request):
-#     if request.method == "GET":
-#         url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/dealerships"
-#         dealerships = get_dealers_by_id(url, dealerID = dealer_id)
-#         dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
-#         return HttpResponse(dealer_names)
-
-# Create a `get_dealer_details` view to render the reviews of a dealer
-# def get_dealer_details(request, dealer_id):
-# ...
-
-# Create a `add_review` view to submit a review
-# def add_review(request, dealer_id):
-# ...
-
+    elif request.method == "POST" and current_user.is_authenticated:
+        form = request.POST
+        review["dealerID"] = dealerID
+        if form["purchasecheck"] == "on":
+            review["purchase"] = True
+            review["content"] = form["content"]
+            review["car"] = form["car"]
+            review["date"] = form["purchasedate"]
+            review["time"] = time_
+        else:
+            review["purchase"] = False
+            review["content"] = form["content"]
+            review["time"] = time_
+        result = post_request(url = api_url, json_payload=review)
+        print(result)
+        return redirect('djangoapp:details-url', dealerID = dealerID)
