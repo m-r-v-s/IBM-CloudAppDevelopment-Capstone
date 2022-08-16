@@ -79,11 +79,14 @@
             </div>
         {% endfor %} 
     </div>
-        {% else %}
-        <div>
-        <h3> Be the first to write a <a href = "{% url 'djangoapp:add-review' dealerID %}">review</a>!</h3>
-        </div>
-        {% endif %} 
+    {% elif not user.is_authenticated %}
+    <h3> You must be logged in to submit a review! </h3>
+    {% else %}
+ 
+    <div>
+    <h3> Be the first to write a <a href = "{% url 'djangoapp:add-review' dealerID %}">review</a>!</h3>
+    </div>
+    {% endif %} 
     </div>
 </body>
 
