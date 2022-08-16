@@ -22,11 +22,20 @@ spec:
       imagePullSecrets: 
       - name: icr
       containers:
-      - image: us.icr.io/sn-labs-mathiasschne/dealership:latest
+      - image: de.icr.io/ms01/dealership:latest
         imagePullPolicy: Always
         name: dealership
         ports:
         - containerPort: 8000
           protocol: TCP
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: HOST_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
       restartPolicy: Always
   replicas: 1

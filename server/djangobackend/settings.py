@@ -28,6 +28,8 @@ DEBUG = True
 APPEND_SLASH = True
 
 ALLOWED_HOSTS = [
+'159.122.181.130',
+os.environ.get("HOST_IP"),
 "localhost",
 "127.0.0.1",
 'mrvs-1995.eu-de.cf.appdomain.cloud'
