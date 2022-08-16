@@ -11,6 +11,7 @@ urlpatterns = [
     path(route='login/', view = views.login_request, name ="login" ),
     path(route = 'logout/', view = views.logout_request, name ="logout"),
     path(route='', view=views.get_dealerships, name='index'),
-    path(route = 'reviews/<int:dealerID>/', view = views.get_dealer_details, name='details-url'),
+    path(route = 'reviews/', view = views.get_dealer_details_query, name='details-query'),
+    path(route = 'reviews/<int:dealerID>/', view = views.get_dealer_details_url, name='details-url'),
     path(route = 'reviews/<int:dealerID>/review', view = views.add_review, name = 'add-review' ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

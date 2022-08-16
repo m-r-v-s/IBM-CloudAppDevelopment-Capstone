@@ -95,14 +95,19 @@ def get_dealer_from_cf_by_state(url, state):
 
 def get_dealer_reviews_from_cf(url, dealerID):
     results = []
-    
     json_result = get_request(url, dealerID = dealerID)
     if json_result:
         reviews = json_result["body"]["data"]["docs"]
         for review in reviews:
-            review_obj = DealerReview(dealership_= review["dealership"], name_ = review["name"],
-                purchase_=review["purchase"], review_ = review["review"], purchase_date_= review["purchase_date"], 
-                car_make_= review["car_make"], car_year_= review["car_year"], id_ = review["id"], car_model_ =review["car_model"],
+            if review["purchase"] is True:
+                review_obj = DealerReview(dealership_= review["dealership"], name_ = review["name"],
+                    purchase_=review["purchase"], review_ = review["review"], purchase_date_= review["purchase_date"], 
+                    car_make_= review["car_make"], car_year_= review["car_year"], id_ = review["id"], car_model_ =review["car_model"],
+                    sentiment_ = analyze_review_sentiments(review["review"]))
+            elif review["purchase"] is False:
+                review_obj = DealerReview(dealership_= review["dealership"], name_ = review["name"],
+                purchase_=review["purchase"], review_ = review["review"], purchase_date_= None, 
+                car_make_= None, car_year_= None, id_ = review["id"], car_model_ = None,
                 sentiment_ = analyze_review_sentiments(review["review"]))
             results.append(review_obj)
     return results

@@ -102,11 +102,28 @@ def get_dealerships(request):
         dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
         return render(request, 'djangoapp/index.html', context=context)
 
-def get_dealer_details(request, dealerID):
+
+def get_dealer_details_query(request):
     context = dict()
-    dealerID_parameter = int(dealerID) #= request.GET.get("dealerID", None) | 
-    context["dealerID"] = dealerID_parameter
     if request.method == "GET":
+        dealerID_parameter = request.GET.get("dealerID")
+        context["dealerID"] = dealerID_parameter
+        url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/reviews"
+        dealer_reviews = get_dealer_reviews_from_cf(url, dealerID = int(dealerID_parameter))
+        review_contents = []
+        for review_obj in dealer_reviews:
+           review_contents.append(' \n'.join("Review:" + review_obj.review + "\tSentiment:" + review_obj.sentiment))
+        context["dealer_reviews"] = dealer_reviews
+        return render(request, 'djangoapp/dealer_details.html', context)
+
+def get_dealer_details_url(request, dealerID):
+    context = dict()
+    if request.method == "GET":
+        if not dealerID:
+            dealerID_parameter = request.GET.get("dealerID")
+        else:
+            dealerID_parameter = int(dealerID) #= request.GET.get("dealerID", None) | 
+            context["dealerID"] = dealerID_parameter
         url = "https://fb5ccb64.eu-de.apigw.appdomain.cloud/api/reviews"
         dealer_reviews = get_dealer_reviews_from_cf(url, dealerID = dealerID_parameter)
         review_contents = []
