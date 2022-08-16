@@ -52,14 +52,26 @@ def post_request(url, json_payload, **kwargs):
 def get_dealers_from_cf(url, **kwargs):
     results = []
     json_result = get_request(url)
-    if json_result:
+    if json_result and kwargs:
+        dealers = json_result["body"]
+        for dealer in dealers:
+            dealer_doc = dealer["doc"]
+            if( dealer_doc["st"] == kwargs.get("state")):
+                dealer_obj = CarDealer(address=dealer_doc["address"], city=dealer_doc["city"], full_name=dealer_doc["full_name"],
+                                    id=dealer_doc["id"], lat=dealer_doc["lat"], long=dealer_doc["long"],
+                                    short_name=dealer_doc["short_name"],
+                                    st=dealer_doc["st"], zip=dealer_doc["zip"])
+                results.append(dealer_obj)
+            else: 
+                pass
+    elif json_result and not kwargs:
         dealers = json_result["body"]
         for dealer in dealers:
             dealer_doc = dealer["doc"]
             dealer_obj = CarDealer(address=dealer_doc["address"], city=dealer_doc["city"], full_name=dealer_doc["full_name"],
-                                   id=dealer_doc["id"], lat=dealer_doc["lat"], long=dealer_doc["long"],
-                                   short_name=dealer_doc["short_name"],
-                                   st=dealer_doc["st"], zip=dealer_doc["zip"])
+                                id=dealer_doc["id"], lat=dealer_doc["lat"], long=dealer_doc["long"],
+                                short_name=dealer_doc["short_name"],
+                                st=dealer_doc["st"], zip=dealer_doc["zip"])
             results.append(dealer_obj)
     return results
 
